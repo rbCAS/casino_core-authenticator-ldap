@@ -82,7 +82,7 @@ describe CASino::LDAPAuthenticator do
     context 'when validation succeeds for user with complete data' do
       let(:fullname) { 'Example User' }
       let(:email) { "#{username}@example.org" }
-      let(:membership) { "cn=group1" }
+      let(:membership) { ["cn=group1","cn=group2"] }
       let(:ldap_entry) {
         entry = Net::LDAP::Entry.new
         {:uid => username, :displayname => fullname, :mail => email, :memberof => membership}.each do |key, value|
@@ -105,7 +105,7 @@ describe CASino::LDAPAuthenticator do
           extra_attributes: {
             :email => email,
             :fullname => fullname,
-            :memberof => membership
+            :memberof => membership.join(", ")
           }
         }
       end
