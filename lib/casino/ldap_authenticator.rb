@@ -75,7 +75,7 @@ class CASino::LDAPAuthenticator
       @options[:extra_attributes].each do |index_result, index_ldap|
         value = @user_plain[index_ldap]
         if value
-          result[index_result] = "#{value.first}"
+          result[index_result] = "#{value.join(', ')}"
         end
       end
       result
