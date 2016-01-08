@@ -61,10 +61,28 @@ describe CASino::LDAPAuthenticator do
     let(:extra_attributes) { ['mail', :displayname, 'memberof'] }
 
     it 'does the connection setup' do
+      connection.should_not_receive(:hosts=)
       connection.should_receive(:host=).with(options[:host])
       connection.should_receive(:port=).with(options[:port])
       connection.should_receive(:encryption).with(:"#{options[:encryption]}")
       subject.validate(username, password)
+    end
+
+    describe 'with :hosts option' do
+      let(:options) { {
+          :hosts => [['localhost', 12445], ['otherhost', 98765]],
+          :base => 'dc=users,dc=example.com',
+          :encryption => 'simple_tls',
+          :username_attribute => 'uid',
+          :extra_attributes => { :email => 'mail', :fullname => :displayname, :memberof => 'memberof'}
+        } }
+      it 'does the connection setup' do
+        connection.should_not_receive(:host=)
+        connection.should_not_receive(:port=)
+        connection.should_receive(:hosts=).with(options[:hosts])
+        connection.should_receive(:encryption).with(:"#{options[:encryption]}")
+      subject.validate(username, password)
+      end
     end
 
     it 'calls the #bind_as method on the LDAP connection' do

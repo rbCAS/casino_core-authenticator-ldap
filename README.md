@@ -10,6 +10,7 @@ To use the LDAP authenticator, configure it in your cas.yml:
         options:
           host: "localhost"
           port: 636
+          # hosts: [['localhost', 636], ['otherhost', 636]]
           base: "ou=people,dc=example,dc=com"
           username_attribute: "uid"
           encryption: "simple_tls"
