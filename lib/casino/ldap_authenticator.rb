@@ -23,8 +23,12 @@ class CASino::LDAPAuthenticator
   private
   def connect_to_ldap
     Net::LDAP.new.tap do |ldap|
-      ldap.host = @options[:host]
-      ldap.port = @options[:port]
+      if @options.key? :hosts
+        ldap.hosts = @options[:hosts]
+      else
+        ldap.host = @options[:host]
+        ldap.port = @options[:port]
+      end
       if @options[:encryption]
         ldap.encryption(@options[:encryption].to_sym)
       end
