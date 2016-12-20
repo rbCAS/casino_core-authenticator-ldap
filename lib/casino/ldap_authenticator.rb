@@ -3,6 +3,7 @@ require 'casino/authenticator'
 
 class CASino::LDAPAuthenticator
   DEFAULT_USERNAME_ATTRIBUTE = 'uid'
+  DEFAULT_USERNAME_SUFFIX = ''
 
   # @param [Hash] options
   def initialize(options)
@@ -59,7 +60,7 @@ class CASino::LDAPAuthenticator
 
   def user_data(user)
     {
-      username: user[username_attribute].first,
+      username: user[username_attribute].first.chomp(username_suffix),
       extra_attributes: extra_attributes(user)
     }
   end
@@ -68,8 +69,12 @@ class CASino::LDAPAuthenticator
     @options[:username_attribute] || DEFAULT_USERNAME_ATTRIBUTE
   end
 
+  def username_suffix
+    @options[:username_suffix] || DEFAULT_USERNAME_SUFFIX
+  end
+
   def user_filter(username)
-    filter = Net::LDAP::Filter.eq(username_attribute, username)
+    filter = Net::LDAP::Filter.eq(username_attribute, username + username_suffix)
     unless @options[:filter].nil?
       filter &= Net::LDAP::Filter.construct(@options[:filter])
     end
