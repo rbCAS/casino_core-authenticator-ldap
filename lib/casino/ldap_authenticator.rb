@@ -77,17 +77,16 @@ class CASino::LDAPAuthenticator
   end
 
   def extra_attributes(user_plain)
-    if @options[:extra_attributes]
-      result = {}
-      @options[:extra_attributes].each do |index_result, index_ldap|
-        value = user_plain[index_ldap]
-        if value
-          result[index_result] = "#{value.first}"
-        end
+    @options[:extra_attributes].each_with_object({}) do |(index_result, index_ldap), result|
+      result.merge!(index_result => user_plain[index_ldap].first.to_s)
+    end.tap do |results|
+      if @options[:extra_attributes].keys.include?(:common_names)
+        results[:common_names] = common_name_list(user_plain[:memberof])
       end
-      result
-    else
-      nil
     end
+  end
+
+  def common_name_list(memberof_list)
+    memberof_list.map { |memberof| memberof.match(/^CN=(\w*),/)[1] }
   end
 end
