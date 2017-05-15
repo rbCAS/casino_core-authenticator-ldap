@@ -8,8 +8,9 @@ describe CASino::LDAPAuthenticator do
     :base => 'dc=users,dc=example.com',
     :encryption => 'simple_tls',
     :username_attribute => 'uid',
-    :extra_attributes => { :email => 'mail', :fullname => :displayname, :memberof => 'memberof'}
+    :extra_attributes => extra_attributes_options
   } }
+  let(:extra_attributes_options) { Hash :email => 'mail', :fullname => :displayname, :memberof => 'memberof' }
   let(:subject) { described_class.new(options) }
   let(:connection) { Object.new }
 
@@ -163,6 +164,54 @@ describe CASino::LDAPAuthenticator do
             :memberof => membership
           }
         }
+      end
+
+      context 'when supplied the common_names option' do
+        let(:extra_attributes_options) { super().merge(common_names: 'common_names') }
+        let(:group_1) { 'CN=group1,OU=Organization,OU=Unit,DC=Domain,DC=Component' }
+        let(:ldap_entry) do
+          Net::LDAP::Entry.new.tap do |entry|
+            entry[:uid] = [username]
+            entry[:displayname] = [fullname]
+            entry[:mail] = [email]
+          end
+        end
+
+        context 'when the user belongs to no groups' do
+          it 'returns the user data with an empty list of common names' do
+            subject.validate(username, password).should == {
+              username: username,
+              extra_attributes: {
+                :email => email,
+                :fullname => fullname,
+                :memberof => '',
+                :common_names => []
+              }
+            }
+          end
+        end
+
+        context 'when the user belongs to many groups' do
+          let(:membership) do
+            [
+              group_1,
+              'CN=group2,OU=Organization,OU=Unit,DC=Domain,DC=Component',
+              'CN=group3,OU=Organization,OU=Unit,DC=Domain,DC=Component',
+            ]
+          end
+          let(:ldap_entry) { super().tap { |entry|  entry[:memberof] = membership } }
+          it 'returns the user data with a list of common names of the groups' do
+            subject.validate(username, password).should == {
+              username: username,
+              extra_attributes: {
+                :email => email,
+                :fullname => fullname,
+                :memberof => group_1,
+                :common_names => ['group1', 'group2', 'group3']
+              }
+            }
+          end
+        end
       end
     end
 
